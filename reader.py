@@ -32,9 +32,6 @@ try:
 		gyro_x = dataf[3]
 		gyro_y = dataf[4]
 		gyro_z = dataf[5]
-		if(not first_run):
-			print(round(accel_x,3) - round(accel_x_ser[-1],3))
-		first_run = False
 		accel_x_ser.append(accel_x)
 		accel_y_ser.append(accel_y)
 		accel_z_ser.append(accel_z)

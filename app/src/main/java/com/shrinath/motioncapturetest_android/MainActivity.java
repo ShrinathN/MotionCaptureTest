@@ -112,10 +112,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     void startAccelerometerDataAcquisition() {
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
 
         gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-        sensorManager.registerListener(this, gyroscope, SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener(this, gyroscope, SensorManager.SENSOR_DELAY_FASTEST);
     }
 
 
@@ -233,7 +233,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
                     DatagramPacket datagramPacket = new DatagramPacket(data, 24, InetAddress.getByName("192.168.43.28"), PORT);
                     datagramSocket.send(datagramPacket);
-                    Thread.sleep(100);
+                    Thread.sleep(17);
                 }
             }
         } catch (Exception e) {
