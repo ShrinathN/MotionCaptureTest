@@ -146,25 +146,25 @@ void processing_loop()
 		// transformation_matrix = glm::rotate(transformation_matrix, glm::radians(0.001f), glm::vec3(0.001f, 0.0f, 0.0f));
 		if (abs(app_data.gyro_x) < 1.0f)
 		{
-			x_rotation_matrix = glm::rotate(x_rotation_matrix, glm::radians(0.001f), glm::vec3(0.001f, 0.0f, 0.0f));
+			x_rotation_matrix = glm::rotate(x_rotation_matrix, glm::radians(0.0f), glm::vec3(0.001f, 0.0f, 0.0f));
 		}
 		else
 		{
-			x_rotation_matrix = glm::rotate(x_rotation_matrix, glm::radians(app_data.gyro_x), glm::vec3(1.0f, 0.0f, 0.0f));
+			x_rotation_matrix = glm::rotate(x_rotation_matrix, glm::radians(app_data.gyro_x), glm::vec3(-1.0f, 0.0f, 0.0f));
 		}
 
 		if (abs(app_data.gyro_y) < 1.0f)
 		{
-			y_rotation_matrix = glm::rotate(y_rotation_matrix, glm::radians(0.001f), glm::vec3(0.0f, 0.001f, 0.0f));
+			y_rotation_matrix = glm::rotate(y_rotation_matrix, glm::radians(0.0f), glm::vec3(0.0f, 0.001f, 0.0f));
 		}
 		else
 		{
-			y_rotation_matrix = glm::rotate(y_rotation_matrix, glm::radians(app_data.gyro_y), glm::vec3(0.0f, 1.0f, 0.0f));
+			y_rotation_matrix = glm::rotate(y_rotation_matrix, glm::radians(app_data.gyro_y), glm::vec3(0.0f, -1.0f, 0.0f));
 		}
 
 		if (abs(app_data.gyro_z) < 1.0f)
 		{
-			z_rotation_matrix = glm::rotate(z_rotation_matrix, glm::radians(0.001f), glm::vec3(0.0f, 0.0f, 0.001f));
+			z_rotation_matrix = glm::rotate(z_rotation_matrix, glm::radians(0.0f), glm::vec3(0.0f, 0.0f, 0.001f));
 		}
 		else
 		{
