@@ -117,9 +117,30 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 Log.d(TAG, "networkSenderLoop: Waiting...");
                 Log.d(TAG, "networkSenderLoop: Sending!");
                 byte data[] = new byte[12];
-                dataInputStream.readByte();
+                int temp;
                 while (socket.isConnected() && !socket.isClosed()) {
-                    
+
+                    temp = Float.floatToIntBits(x);
+                    data[0] = (byte)((temp & 0x000000ff) >> 0);
+                    data[1] = (byte)((temp & 0x0000ff00) >> 8);
+                    data[2] = (byte)((temp & 0x00ff0000) >> 16);
+                    data[3] = (byte)((temp & 0xff000000) >> 24);
+
+
+                    temp = Float.floatToIntBits(y);
+                    data[4] = (byte)((temp & 0x000000ff) >> 0);
+                    data[5] = (byte)((temp & 0x0000ff00) >> 8);
+                    data[6] = (byte)((temp & 0x00ff0000) >> 16);
+                    data[7] = (byte)((temp & 0xff000000) >> 24);
+
+                    temp = Float.floatToIntBits(z);
+                    data[8] = (byte)((temp & 0x000000ff) >> 0);
+                    data[9] = (byte)((temp & 0x0000ff00) >> 8);
+                    data[10] = (byte)((temp & 0x00ff0000) >> 16);
+                    data[11] = (byte)((temp & 0xff000000) >> 24);
+
+                    dataInputStream.readByte();
+                    dataOutputStream.write(data);
                 }
                 dataInputStream.close();
                 dataOutputStream.close();
