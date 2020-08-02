@@ -2,6 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.shrinath.motioncapturetest_android">
 
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.BODY_SENSORS"/>
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
