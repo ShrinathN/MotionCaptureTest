@@ -14,11 +14,15 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import java.io.DataInput;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.Buffer;
+import java.sql.Struct;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
@@ -26,15 +30,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     final static String TAG = "TAG";
     final static int PORT = 8080;
+    boolean running = false;
 
     Button button_start;
     TextView textView_x;
     TextView textView_y;
     TextView textView_z;
-    TextView textView_x_label;
-    TextView textView_y_label;
-    TextView textView_z_label;
-
     SensorManager sensorManager;
     Sensor accelerometer;
 
@@ -53,11 +54,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     };
 
     void startAccelerometerDataAcquisition() {
+        running = true;
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
     }
-
 
 
     @Override
@@ -66,9 +67,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         setContentView(R.layout.activity_main);
 
         handler = new Handler();
-        textView_x_label = findViewById(R.id.textView_x_label);
-        textView_y_label = findViewById(R.id.textView_y_label);
-        textView_z_label = findViewById(R.id.textView_z_label);
         textView_x = findViewById(R.id.textView_x);
         textView_y = findViewById(R.id.textView_y);
         textView_z = findViewById(R.id.textView_z);
@@ -93,7 +91,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     @Override
     public void onSensorChanged(SensorEvent event) {
         Sensor sensor = event.sensor;
-        if(sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+        if (sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
 //            Log.d(TAG, "x : " + Float.toString(x) + "\ny : " + Float.toString(y) + "\nz : " + Float.toString(z) + "\n");
             x = event.values[0];
             y = event.values[1];
@@ -109,18 +107,27 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     public void networkSenderLoop() {
         try {
-            ServerSocket serverSocket = new ServerSocket(PORT);
-            Log.d(TAG, "networkSenderLoop: Listening!! " + InetAddress.getLocalHost());
-            Socket socket = serverSocket.accept();
-            Log.d(TAG, "networkSenderLoop: Connected!");
-            DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
-            while(socket.isConnected() && !socket.isClosed()) {
-                dataOutputStream.writeFloat(x);
-                dataOutputStream.writeFloat(y);
-                dataOutputStream.writeFloat(z);
-                Thread.sleep(33);
+            while (running) {
+                ServerSocket serverSocket = new ServerSocket(PORT);
+                Log.d(TAG, "networkSenderLoop: Listening!! " + InetAddress.getLocalHost());
+                Socket socket = serverSocket.accept();
+                Log.d(TAG, "networkSenderLoop: Connected!");
+                DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
+                DataInputStream dataInputStream = new DataInputStream(socket.getInputStream());
+                Log.d(TAG, "networkSenderLoop: Waiting...");
+                Log.d(TAG, "networkSenderLoop: Sending!");
+                byte data[] = new byte[12];
+                dataInputStream.readByte();
+                while (socket.isConnected() && !socket.isClosed()) {
+                    
+                }
+                dataInputStream.close();
+                dataOutputStream.close();
+                socket.shutdownInput();
+                socket.shutdownOutput();
+                socket.close();
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             Log.d(TAG, "networkSenderLoop: " + e);
         }
     }
