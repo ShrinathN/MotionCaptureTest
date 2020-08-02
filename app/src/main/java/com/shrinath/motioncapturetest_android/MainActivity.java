@@ -34,9 +34,7 @@ import java.sql.Struct;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
-    Handler handler;
-    Thread thread;
-
+    //contants
     final static String TAG = "TAG";
     final static int PORT = 8080;
 
@@ -48,6 +46,18 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     final static float GYRO_Y_THRESHOLD = 5.0f;
     final static float GYRO_Z_THRESHOLD = 5.0f;
 
+    //global objects
+    Handler handler;
+    Thread thread;
+
+    //global variables
+    public boolean running = false;
+    public float accel_x;
+    public float accel_y;
+    public float accel_z;
+    public float gyro_x;
+    public float gyro_y;
+    public float gyro_z;
 
     //UI widgets
     Button button_start;
@@ -63,14 +73,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     SensorManager sensorManager;
     Sensor accelerometer;
     Sensor gyroscope;
-
-
-    public float accel_x;
-    public float accel_y;
-    public float accel_z;
-    public float gyro_x;
-    public float gyro_y;
-    public float gyro_z;
 
     float map(float x, float in_min, float in_max, float out_min, float out_max) {
         return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
@@ -128,6 +130,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 networkSenderLoop();
             }
         });
+        thread.start();
 
         startAccelerometerDataAcquisition();
 
@@ -147,7 +150,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         button_start.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                thread.start();
+                running = true;
                 button_start.setEnabled(false);
                 button_stop.setEnabled(true);
             }
@@ -156,8 +159,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         button_stop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                thread.interrupt();
-                thread.stop();
+                running = false;
                 button_stop.setEnabled(false);
                 button_start.setEnabled(true);
             }
@@ -173,12 +175,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             accel_x = event.values[0];
             accel_y = event.values[1];
             accel_z = event.values[2];
-            handler.post(updateUi);
         } else if (sensor.getType() == Sensor.TYPE_GYROSCOPE) {
             gyro_x = event.values[0];
             gyro_y = event.values[1];
             gyro_z = event.values[2];
         }
+        handler.post(updateUi);
     }
 
     @Override
@@ -192,44 +194,47 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         DatagramSocket datagramSocket;
         try {
             datagramSocket = new DatagramSocket(PORT);
-            while (!Thread.interrupted()) {
-                //accelerometer
-                temp = Float.floatToIntBits(accel_x);
-                data[0] = (byte) ((temp & 0x000000ff) >> 0);
-                data[1] = (byte) ((temp & 0x0000ff00) >> 8);
-                data[2] = (byte) ((temp & 0x00ff0000) >> 16);
-                data[3] = (byte) ((temp & 0xff000000) >> 24);
-                temp = Float.floatToIntBits(accel_y);
-                data[4] = (byte) ((temp & 0x000000ff) >> 0);
-                data[5] = (byte) ((temp & 0x0000ff00) >> 8);
-                data[6] = (byte) ((temp & 0x00ff0000) >> 16);
-                data[7] = (byte) ((temp & 0xff000000) >> 24);
-                temp = Float.floatToIntBits(accel_z);
-                data[8] = (byte) ((temp & 0x000000ff) >> 0);
-                data[9] = (byte) ((temp & 0x0000ff00) >> 8);
-                data[10] = (byte) ((temp & 0x00ff0000) >> 16);
-                data[11] = (byte) ((temp & 0xff000000) >> 24);
+            while (true) {
+                if (running) {
+                    //accelerometer
+                    temp = Float.floatToIntBits(accel_x);
+                    data[0] = (byte) ((temp & 0x000000ff) >> 0);
+                    data[1] = (byte) ((temp & 0x0000ff00) >> 8);
+                    data[2] = (byte) ((temp & 0x00ff0000) >> 16);
+                    data[3] = (byte) ((temp & 0xff000000) >> 24);
+                    temp = Float.floatToIntBits(accel_y);
+                    data[4] = (byte) ((temp & 0x000000ff) >> 0);
+                    data[5] = (byte) ((temp & 0x0000ff00) >> 8);
+                    data[6] = (byte) ((temp & 0x00ff0000) >> 16);
+                    data[7] = (byte) ((temp & 0xff000000) >> 24);
+                    temp = Float.floatToIntBits(accel_z);
+                    data[8] = (byte) ((temp & 0x000000ff) >> 0);
+                    data[9] = (byte) ((temp & 0x0000ff00) >> 8);
+                    data[10] = (byte) ((temp & 0x00ff0000) >> 16);
+                    data[11] = (byte) ((temp & 0xff000000) >> 24);
 
-                //gyroscope
-                temp = Float.floatToIntBits(gyro_x);
-                data[12] = (byte) ((temp & 0x000000ff) >> 0);
-                data[13] = (byte) ((temp & 0x0000ff00) >> 8);
-                data[14] = (byte) ((temp & 0x00ff0000) >> 16);
-                data[15] = (byte) ((temp & 0xff000000) >> 24);
-                temp = Float.floatToIntBits(gyro_y);
-                data[16] = (byte) ((temp & 0x000000ff) >> 0);
-                data[17] = (byte) ((temp & 0x0000ff00) >> 8);
-                data[18] = (byte) ((temp & 0x00ff0000) >> 16);
-                data[19] = (byte) ((temp & 0xff000000) >> 24);
-                temp = Float.floatToIntBits(gyro_z);
-                data[20] = (byte) ((temp & 0x000000ff) >> 0);
-                data[21] = (byte) ((temp & 0x0000ff00) >> 8);
-                data[22] = (byte) ((temp & 0x00ff0000) >> 16);
-                data[23] = (byte) ((temp & 0xff000000) >> 24);
+                    //gyroscope
+                    temp = Float.floatToIntBits(gyro_x);
+                    data[12] = (byte) ((temp & 0x000000ff) >> 0);
+                    data[13] = (byte) ((temp & 0x0000ff00) >> 8);
+                    data[14] = (byte) ((temp & 0x00ff0000) >> 16);
+                    data[15] = (byte) ((temp & 0xff000000) >> 24);
+                    temp = Float.floatToIntBits(gyro_y);
+                    data[16] = (byte) ((temp & 0x000000ff) >> 0);
+                    data[17] = (byte) ((temp & 0x0000ff00) >> 8);
+                    data[18] = (byte) ((temp & 0x00ff0000) >> 16);
+                    data[19] = (byte) ((temp & 0xff000000) >> 24);
+                    temp = Float.floatToIntBits(gyro_z);
+                    data[20] = (byte) ((temp & 0x000000ff) >> 0);
+                    data[21] = (byte) ((temp & 0x0000ff00) >> 8);
+                    data[22] = (byte) ((temp & 0x00ff0000) >> 16);
+                    data[23] = (byte) ((temp & 0xff000000) >> 24);
 
 
-                DatagramPacket datagramPacket = new DatagramPacket(data, 24, InetAddress.getByName("192.168.43.28"), PORT);
-                datagramSocket.send(datagramPacket);
+                    DatagramPacket datagramPacket = new DatagramPacket(data, 24, InetAddress.getByName("192.168.43.28"), PORT);
+                    datagramSocket.send(datagramPacket);
+                    Thread.sleep(100);
+                }
             }
         } catch (Exception e) {
             Log.d(TAG, "networkSenderLoop: " + e);

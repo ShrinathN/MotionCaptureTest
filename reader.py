@@ -18,6 +18,8 @@ s = socket(AF_INET, SOCK_DGRAM, 0)
 s.bind(("0.0.0.0", 8080))
 s.setblocking(True)
 
+first_run = True
+
 try:
 	while True:
 		data0 = s.recv(24)
@@ -30,12 +32,9 @@ try:
 		gyro_x = dataf[3]
 		gyro_y = dataf[4]
 		gyro_z = dataf[5]
-		print("accel_x : " + str(accel_x))
-		print("accel_y : " + str(accel_y))
-		print("accel_z : " + str(accel_z))
-		print("gyro_x : " + str(gyro_x))
-		print("gyro_y : " + str(gyro_y))
-		print("gyro_z : " + str(gyro_z))
+		if(not first_run):
+			print(round(accel_x,3) - round(accel_x_ser[-1],3))
+		first_run = False
 		accel_x_ser.append(accel_x)
 		accel_y_ser.append(accel_y)
 		accel_z_ser.append(accel_z)
