@@ -1,5 +1,6 @@
 package com.shrinath.motioncapturetest_android;
 
+import androidx.annotation.ColorInt;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NotificationCompat;
 
@@ -7,6 +8,7 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -33,15 +35,21 @@ import java.sql.Struct;
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
     Handler handler;
+    Thread thread;
 
     final static String TAG = "TAG";
     final static int PORT = 8080;
-    final static String CHANNEL_ID = "1244";
-    final static String CHANNEL_NAME = "MyChannel";
+
+    final static float ACCEL_X_THRESHOLD = 10.0f;
+    final static float ACCEL_Y_THRESHOLD = 10.0f;
+    final static float ACCEL_Z_THRESHOLD = 10.0f;
+
+    final static float GYRO_X_THRESHOLD = 5.0f;
+    final static float GYRO_Y_THRESHOLD = 5.0f;
+    final static float GYRO_Z_THRESHOLD = 5.0f;
 
 
-    boolean running = false;
-
+    //UI widgets
     Button button_start;
     Button button_stop;
     TextView textView_accel_x;
@@ -50,6 +58,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     TextView textView_gyro_x;
     TextView textView_gyro_y;
     TextView textView_gyro_z;
+
+    //sensors
     SensorManager sensorManager;
     Sensor accelerometer;
     Sensor gyroscope;
@@ -62,16 +72,38 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     public float gyro_y;
     public float gyro_z;
 
+    float map(float x, float in_min, float in_max, float out_min, float out_max) {
+        return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+    }
+
     Runnable updateUi = new Runnable() {
         @Override
         public void run() {
+            int col_val;
+            col_val = (int) map(Math.abs(accel_x), 0, ACCEL_X_THRESHOLD, 0.0f, 255.0f);
             textView_accel_x.setText(Float.toString(accel_x));
-            textView_accel_y.setText(Float.toString(accel_y));
-            textView_accel_z.setText(Float.toString(accel_z));
+            textView_accel_x.setBackgroundColor(Color.rgb(0 + col_val, 255 - col_val, 0));
 
+            col_val = (int) map(Math.abs(accel_y), 0, ACCEL_Y_THRESHOLD, 0.0f, 255.0f);
+            textView_accel_y.setText(Float.toString(accel_y));
+            textView_accel_y.setBackgroundColor(Color.rgb(0 + col_val, 255 - col_val, 0));
+
+            col_val = (int) map(Math.abs(accel_z), 0, ACCEL_Z_THRESHOLD, 0.0f, 255.0f);
+            textView_accel_z.setText(Float.toString(accel_z));
+            textView_accel_z.setBackgroundColor(Color.rgb(0 + col_val, 255 - col_val, 0));
+
+            col_val = (int) map(Math.abs(gyro_x), 0, GYRO_X_THRESHOLD, 0.0f, 255.0f);
             textView_gyro_x.setText(Float.toString(gyro_x));
+            textView_gyro_x.setBackgroundColor(Color.rgb(0 + col_val, 255 - col_val, 0));
+
+            col_val = (int) map(Math.abs(gyro_y), 0, GYRO_Y_THRESHOLD, 0.0f, 255.0f);
             textView_gyro_y.setText(Float.toString(gyro_y));
+            textView_gyro_y.setBackgroundColor(Color.rgb(0 + col_val, 255 - col_val, 0));
+
+            col_val = (int) map(Math.abs(gyro_z), 0, GYRO_Z_THRESHOLD, 0.0f, 255.0f);
             textView_gyro_z.setText(Float.toString(gyro_z));
+            textView_gyro_z.setBackgroundColor(Color.rgb(0 + col_val, 255 - col_val, 0));
+
         }
     };
 
@@ -89,6 +121,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                networkSenderLoop();
+            }
+        });
 
         startAccelerometerDataAcquisition();
 
@@ -108,13 +147,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         button_start.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                running = true;
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        networkSenderLoop();
-                    }
-                }).start();
+                thread.start();
                 button_start.setEnabled(false);
                 button_stop.setEnabled(true);
             }
@@ -123,7 +156,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         button_stop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                running = false;
+                thread.interrupt();
+                thread.stop();
                 button_stop.setEnabled(false);
                 button_start.setEnabled(true);
             }
@@ -140,7 +174,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             accel_y = event.values[1];
             accel_z = event.values[2];
             handler.post(updateUi);
-        } else if(sensor.getType() == Sensor.TYPE_GYROSCOPE) {
+        } else if (sensor.getType() == Sensor.TYPE_GYROSCOPE) {
             gyro_x = event.values[0];
             gyro_y = event.values[1];
             gyro_z = event.values[2];
@@ -158,7 +192,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         DatagramSocket datagramSocket;
         try {
             datagramSocket = new DatagramSocket(PORT);
-            while (running) {
+            while (!Thread.interrupted()) {
                 //accelerometer
                 temp = Float.floatToIntBits(accel_x);
                 data[0] = (byte) ((temp & 0x000000ff) >> 0);
