@@ -1,6 +1,8 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <stb_image.h>
+#include <unistd.h>
+#include <math.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -10,7 +12,7 @@
 
 extern struct _app_data_ app_data;
 
-GLFWwindow * window;
+GLFWwindow *window;
 
 GLuint vao;
 GLuint vbo;
@@ -20,7 +22,9 @@ GLuint fshader;
 GLuint program;
 
 GLint transformation_matrix_location;
-GLint translation_matrix_location;
+GLint x_rotation_matrix_location;
+GLint y_rotation_matrix_location;
+GLint z_rotation_matrix_location;
 
 const GLfloat cube_data[] = {
 	//down
@@ -69,7 +73,7 @@ const GLfloat cube_data[] = {
 	-0.25, -0.25, -0.25, 1.0, 1.0, 1.0};
 
 char *vshader_str;
-char *fshader_str; 
+char *fshader_str;
 
 char *loadShader(const char *filename)
 {
@@ -83,7 +87,6 @@ char *loadShader(const char *filename)
 	fclose(in);
 	return to_return_ptr;
 }
-
 
 void checkShader(GLuint *shader)
 {
@@ -115,36 +118,86 @@ void shader_init()
 	glUseProgram(program);
 
 	transformation_matrix_location = glGetUniformLocation(program, "transformation_matrix");
-	// translation_matrix_location = glGetUniformLocation(program, "translation_matrix");
+	x_rotation_matrix_location = glGetUniformLocation(program, "x_rotation_matrix");
+	y_rotation_matrix_location = glGetUniformLocation(program, "y_rotation_matrix");
+	z_rotation_matrix_location = glGetUniformLocation(program, "z_rotation_matrix");
 }
 
 void processing_loop()
 {
 	glm::mat4 transformation_matrix = glm::mat4(1.0f);
-	glm::mat4 translation_matrix = glm::mat4(1.0f);
+	glm::mat4 x_rotation_matrix = glm::mat4(1.0);
+	glm::mat4 y_rotation_matrix = glm::mat4(1.0);
+	glm::mat4 z_rotation_matrix = glm::mat4(1.0);
 	glEnable(GL_DEPTH_TEST);
 	glUseProgram(program);
-	float z_translate = 1.0f;
+	int bytes_read;
+	float old_gyro_x = 0;
+	float old_gyro_y = 0;
+	float old_gyro_z = 0;
 	while (!glfwWindowShouldClose(window))
 	{
-		// NETWORK_read_data();
+		bytes_read = NETWORK_read_data();
+		// printf("%d ", bytes_read);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		glUseProgram(program);
 
-		transformation_matrix = glm::rotate(transformation_matrix, glm::radians(1.0f), glm::vec3(0.0,0.0,0.0));
-		// translation_matrix = glm::scale(translation_matrix, glm::vec3(z_translate, z_translate, z_translate));
+		// transformation_matrix = glm::rotate(transformation_matrix, glm::radians(0.001f), glm::vec3(0.001f, 0.0f, 0.0f));
+		if (abs(app_data.gyro_x) < 1.0f)
+		{
+			x_rotation_matrix = glm::rotate(x_rotation_matrix, glm::radians(0.001f), glm::vec3(0.001f, 0.0f, 0.0f));
+		}
+		else
+		{
+			x_rotation_matrix = glm::rotate(x_rotation_matrix, glm::radians(app_data.gyro_x), glm::vec3(1.0f, 0.0f, 0.0f));
+		}
+
+		if (abs(app_data.gyro_y) < 1.0f)
+		{
+			y_rotation_matrix = glm::rotate(y_rotation_matrix, glm::radians(0.001f), glm::vec3(0.0f, 0.001f, 0.0f));
+		}
+		else
+		{
+			y_rotation_matrix = glm::rotate(y_rotation_matrix, glm::radians(app_data.gyro_y), glm::vec3(0.0f, 1.0f, 0.0f));
+		}
+
+		if (abs(app_data.gyro_z) < 1.0f)
+		{
+			z_rotation_matrix = glm::rotate(z_rotation_matrix, glm::radians(0.001f), glm::vec3(0.0f, 0.0f, 0.001f));
+		}
+		else
+		{
+			z_rotation_matrix = glm::rotate(z_rotation_matrix, glm::radians(app_data.gyro_z), glm::vec3(0.0f, 0.0f, 1.0f));
+		}
+
+		// x_rotation_matrix = glm::rotate(x_rotation_matrix, glm::radians(app_data.gyro_x), glm::vec3(1.0f, 0.0f, 0.0f));
+		// y_rotation_matrix = glm::rotate(y_rotation_matrix, glm::radians(app_data.gyro_y), glm::vec3(0.0f, 1.0f, 0.0f));
+		// z_rotation_matrix = glm::rotate(z_rotation_matrix, glm::radians(app_data.gyro_z), glm::vec3(0.0f, 0.0f, 1.0f));
+
+		old_gyro_x = app_data.gyro_x;
+		old_gyro_y = app_data.gyro_y;
+		old_gyro_z = app_data.gyro_z;
 
 		glUniformMatrix4fv(transformation_matrix_location, 1, GL_FALSE, glm::value_ptr(transformation_matrix));
-		// glUniformMatrix4fv(translation_matrix_location, 1, GL_FALSE, glm::value_ptr(translation_matrix));
+		glUniformMatrix4fv(x_rotation_matrix_location, 1, GL_FALSE, glm::value_ptr(x_rotation_matrix));
+		glUniformMatrix4fv(y_rotation_matrix_location, 1, GL_FALSE, glm::value_ptr(y_rotation_matrix));
+		glUniformMatrix4fv(z_rotation_matrix_location, 1, GL_FALSE, glm::value_ptr(z_rotation_matrix));
 		glBindVertexArray(vao);
 		glDrawArrays(GL_TRIANGLES, 0, sizeof(cube_data) / (sizeof(GLfloat) * 6));
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 
-	
-		printf("%f\n", z_translate);
+		// printf("%f %f %f %f %f %f\n",
+		// 	   app_data.gyro_x,
+		// 	   app_data.gyro_y,
+		// 	   app_data.gyro_z,
+		// 	   old_gyro_x,
+		// 	   old_gyro_y,
+		// 	   old_gyro_z);
+
+		// usleep(16666);
 	}
 }
 
@@ -174,12 +227,12 @@ void window_init()
 
 int main()
 {
-	NETWORK_create_socket();
 	window_init();
 	vshader_str = loadShader("VertexShader.vs");
 	fshader_str = loadShader("FragmentShader.fs");
 	figure_init();
 	shader_init();
 
+	NETWORK_create_socket();
 	processing_loop();
 }
