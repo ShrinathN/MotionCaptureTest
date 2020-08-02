@@ -1,7 +1,11 @@
 package com.shrinath.motioncapturetest_android;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NotificationCompat;
 
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -18,6 +22,8 @@ import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.OutputStream;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -30,34 +36,52 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     final static String TAG = "TAG";
     final static int PORT = 8080;
+    final static String CHANNEL_ID = "1244";
+    final static String CHANNEL_NAME = "MyChannel";
+
+
     boolean running = false;
 
     Button button_start;
-    TextView textView_x;
-    TextView textView_y;
-    TextView textView_z;
+    Button button_stop;
+    TextView textView_accel_x;
+    TextView textView_accel_y;
+    TextView textView_accel_z;
+    TextView textView_gyro_x;
+    TextView textView_gyro_y;
+    TextView textView_gyro_z;
     SensorManager sensorManager;
     Sensor accelerometer;
+    Sensor gyroscope;
 
 
-    public float z;
-    public float x;
-    public float y;
+    public float accel_x;
+    public float accel_y;
+    public float accel_z;
+    public float gyro_x;
+    public float gyro_y;
+    public float gyro_z;
 
     Runnable updateUi = new Runnable() {
         @Override
         public void run() {
-            textView_x.setText(Float.toString(x));
-            textView_y.setText(Float.toString(y));
-            textView_z.setText(Float.toString(z));
+            textView_accel_x.setText(Float.toString(accel_x));
+            textView_accel_y.setText(Float.toString(accel_y));
+            textView_accel_z.setText(Float.toString(accel_z));
+
+            textView_gyro_x.setText(Float.toString(gyro_x));
+            textView_gyro_y.setText(Float.toString(gyro_y));
+            textView_gyro_z.setText(Float.toString(gyro_z));
         }
     };
 
     void startAccelerometerDataAcquisition() {
-        running = true;
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+
+        gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        sensorManager.registerListener(this, gyroscope, SensorManager.SENSOR_DELAY_NORMAL);
     }
 
 
@@ -66,16 +90,25 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        startAccelerometerDataAcquisition();
+
         handler = new Handler();
-        textView_x = findViewById(R.id.textView_x);
-        textView_y = findViewById(R.id.textView_y);
-        textView_z = findViewById(R.id.textView_z);
+        textView_accel_x = findViewById(R.id.textView_accel_x);
+        textView_accel_y = findViewById(R.id.textView_accel_y);
+        textView_accel_z = findViewById(R.id.textView_accel_z);
+
+        textView_gyro_x = findViewById(R.id.textView_gyro_x);
+        textView_gyro_y = findViewById(R.id.textView_gyro_y);
+        textView_gyro_z = findViewById(R.id.textView_gyro_z);
 
         button_start = findViewById(R.id.button_start);
+        button_stop = findViewById(R.id.button_stop);
+        button_stop.setEnabled(false);
+
         button_start.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startAccelerometerDataAcquisition();
+                running = true;
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
@@ -83,6 +116,16 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     }
                 }).start();
                 button_start.setEnabled(false);
+                button_stop.setEnabled(true);
+            }
+        });
+
+        button_stop.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                running = false;
+                button_stop.setEnabled(false);
+                button_start.setEnabled(true);
             }
         });
 
@@ -93,10 +136,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         Sensor sensor = event.sensor;
         if (sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
 //            Log.d(TAG, "x : " + Float.toString(x) + "\ny : " + Float.toString(y) + "\nz : " + Float.toString(z) + "\n");
-            x = event.values[0];
-            y = event.values[1];
-            z = event.values[2];
+            accel_x = event.values[0];
+            accel_y = event.values[1];
+            accel_z = event.values[2];
             handler.post(updateUi);
+        } else if(sensor.getType() == Sensor.TYPE_GYROSCOPE) {
+            gyro_x = event.values[0];
+            gyro_y = event.values[1];
+            gyro_z = event.values[2];
         }
     }
 
@@ -106,47 +153,49 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     public void networkSenderLoop() {
+        byte data[] = new byte[24];
+        int temp;
+        DatagramSocket datagramSocket;
         try {
+            datagramSocket = new DatagramSocket(PORT);
             while (running) {
-                ServerSocket serverSocket = new ServerSocket(PORT);
-                Log.d(TAG, "networkSenderLoop: Listening!! " + InetAddress.getLocalHost());
-                Socket socket = serverSocket.accept();
-                Log.d(TAG, "networkSenderLoop: Connected!");
-                DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
-                DataInputStream dataInputStream = new DataInputStream(socket.getInputStream());
-                Log.d(TAG, "networkSenderLoop: Waiting...");
-                Log.d(TAG, "networkSenderLoop: Sending!");
-                byte data[] = new byte[12];
-                int temp;
-                while (socket.isConnected() && !socket.isClosed()) {
+                //accelerometer
+                temp = Float.floatToIntBits(accel_x);
+                data[0] = (byte) ((temp & 0x000000ff) >> 0);
+                data[1] = (byte) ((temp & 0x0000ff00) >> 8);
+                data[2] = (byte) ((temp & 0x00ff0000) >> 16);
+                data[3] = (byte) ((temp & 0xff000000) >> 24);
+                temp = Float.floatToIntBits(accel_y);
+                data[4] = (byte) ((temp & 0x000000ff) >> 0);
+                data[5] = (byte) ((temp & 0x0000ff00) >> 8);
+                data[6] = (byte) ((temp & 0x00ff0000) >> 16);
+                data[7] = (byte) ((temp & 0xff000000) >> 24);
+                temp = Float.floatToIntBits(accel_z);
+                data[8] = (byte) ((temp & 0x000000ff) >> 0);
+                data[9] = (byte) ((temp & 0x0000ff00) >> 8);
+                data[10] = (byte) ((temp & 0x00ff0000) >> 16);
+                data[11] = (byte) ((temp & 0xff000000) >> 24);
 
-                    temp = Float.floatToIntBits(x);
-                    data[0] = (byte)((temp & 0x000000ff) >> 0);
-                    data[1] = (byte)((temp & 0x0000ff00) >> 8);
-                    data[2] = (byte)((temp & 0x00ff0000) >> 16);
-                    data[3] = (byte)((temp & 0xff000000) >> 24);
+                //gyroscope
+                temp = Float.floatToIntBits(gyro_x);
+                data[12] = (byte) ((temp & 0x000000ff) >> 0);
+                data[13] = (byte) ((temp & 0x0000ff00) >> 8);
+                data[14] = (byte) ((temp & 0x00ff0000) >> 16);
+                data[15] = (byte) ((temp & 0xff000000) >> 24);
+                temp = Float.floatToIntBits(gyro_y);
+                data[16] = (byte) ((temp & 0x000000ff) >> 0);
+                data[17] = (byte) ((temp & 0x0000ff00) >> 8);
+                data[18] = (byte) ((temp & 0x00ff0000) >> 16);
+                data[19] = (byte) ((temp & 0xff000000) >> 24);
+                temp = Float.floatToIntBits(gyro_z);
+                data[20] = (byte) ((temp & 0x000000ff) >> 0);
+                data[21] = (byte) ((temp & 0x0000ff00) >> 8);
+                data[22] = (byte) ((temp & 0x00ff0000) >> 16);
+                data[23] = (byte) ((temp & 0xff000000) >> 24);
 
 
-                    temp = Float.floatToIntBits(y);
-                    data[4] = (byte)((temp & 0x000000ff) >> 0);
-                    data[5] = (byte)((temp & 0x0000ff00) >> 8);
-                    data[6] = (byte)((temp & 0x00ff0000) >> 16);
-                    data[7] = (byte)((temp & 0xff000000) >> 24);
-
-                    temp = Float.floatToIntBits(z);
-                    data[8] = (byte)((temp & 0x000000ff) >> 0);
-                    data[9] = (byte)((temp & 0x0000ff00) >> 8);
-                    data[10] = (byte)((temp & 0x00ff0000) >> 16);
-                    data[11] = (byte)((temp & 0xff000000) >> 24);
-
-                    dataInputStream.readByte();
-                    dataOutputStream.write(data);
-                }
-                dataInputStream.close();
-                dataOutputStream.close();
-                socket.shutdownInput();
-                socket.shutdownOutput();
-                socket.close();
+                DatagramPacket datagramPacket = new DatagramPacket(data, 24, InetAddress.getByName("192.168.43.28"), PORT);
+                datagramSocket.send(datagramPacket);
             }
         } catch (Exception e) {
             Log.d(TAG, "networkSenderLoop: " + e);
