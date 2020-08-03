@@ -5,6 +5,8 @@ I haven't seen anyone doing anything too interesting with the gyroscopes and acc
 
 ![Demo Gif](https://raw.githubusercontent.com/ShrinathN/MotionCaptureTest/master/img/Test.gif)
 
+There is a lag in my webcam video input, so the cube is rotating a few seconds into the future.
+
 The results were great, I was able to rotate the cube using my smartphone. There was some input lag, but that was solved by increasing the sampling rate on my smartphone, and switching from my normal WiFi network to using my phone as a WiFi hotspot.
 
 ![App Working](https://raw.githubusercontent.com/ShrinathN/MotionCaptureTest/master/img/App.gif)
