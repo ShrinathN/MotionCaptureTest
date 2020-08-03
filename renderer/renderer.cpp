@@ -11,7 +11,7 @@
 #include "network.hpp"
 
 extern struct _app_data_ app_data;
-
+struct _app_data_ old_app_data = {0,};
 GLFWwindow *window;
 
 GLuint vao;
@@ -132,9 +132,7 @@ void processing_loop()
 	glEnable(GL_DEPTH_TEST);
 	glUseProgram(program);
 	int bytes_read;
-	float old_gyro_x = 0;
-	float old_gyro_y = 0;
-	float old_gyro_z = 0;
+	
 	while (!glfwWindowShouldClose(window))
 	{
 		bytes_read = NETWORK_read_data();
@@ -170,15 +168,6 @@ void processing_loop()
 		{
 			z_rotation_matrix = glm::rotate(z_rotation_matrix, glm::radians(app_data.gyro_z), glm::vec3(0.0f, 0.0f, 1.0f));
 		}
-
-		// x_rotation_matrix = glm::rotate(x_rotation_matrix, glm::radians(app_data.gyro_x), glm::vec3(1.0f, 0.0f, 0.0f));
-		// y_rotation_matrix = glm::rotate(y_rotation_matrix, glm::radians(app_data.gyro_y), glm::vec3(0.0f, 1.0f, 0.0f));
-		// z_rotation_matrix = glm::rotate(z_rotation_matrix, glm::radians(app_data.gyro_z), glm::vec3(0.0f, 0.0f, 1.0f));
-
-		old_gyro_x = app_data.gyro_x;
-		old_gyro_y = app_data.gyro_y;
-		old_gyro_z = app_data.gyro_z;
-
 		glUniformMatrix4fv(transformation_matrix_location, 1, GL_FALSE, glm::value_ptr(transformation_matrix));
 		glUniformMatrix4fv(x_rotation_matrix_location, 1, GL_FALSE, glm::value_ptr(x_rotation_matrix));
 		glUniformMatrix4fv(y_rotation_matrix_location, 1, GL_FALSE, glm::value_ptr(y_rotation_matrix));

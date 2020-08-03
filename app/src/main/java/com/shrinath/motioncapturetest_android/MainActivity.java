@@ -1,13 +1,16 @@
 package com.shrinath.motioncapturetest_android;
 
 import androidx.annotation.ColorInt;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NotificationCompat;
 
+import android.app.Dialog;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -16,9 +19,14 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.DataInput;
 import java.io.DataInputStream;
@@ -30,6 +38,7 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.Buffer;
+import java.security.PrivateKey;
 import java.sql.Struct;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
@@ -78,6 +87,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
     }
 
+    void sendToast(String text_to_write) {
+        Toast.makeText(this, text_to_write, Toast.LENGTH_LONG).show();
+    }
+
     Runnable updateUi = new Runnable() {
         @Override
         public void run() {
@@ -118,6 +131,41 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         sensorManager.registerListener(this, gyroscope, SensorManager.SENSOR_DELAY_FASTEST);
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater menuInflater = getMenuInflater();
+        menuInflater.inflate(R.menu.menu, menu);
+        return true;
+    }
+
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        int id = item.getItemId();
+
+        if(id == R.id.menu_select_ip) {
+            final Dialog dialog = new Dialog(this);
+            dialog.setContentView(R.layout.layout_selectip);
+            Button button_set_ip = dialog.findViewById(R.id.button_set_ip);
+            final EditText editText_ip_addr = dialog.findViewById(R.id.editText_ip_addr);
+
+            button_set_ip.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+
+                    SharedPreferences.Editor editor = getApplicationContext().getSharedPreferences("ADDR", MODE_PRIVATE).edit();
+                    editor.putString("IP", editText_ip_addr.getText().toString());
+                    editor.commit();
+                    editor.apply();
+
+                    dialog.dismiss();
+                }
+            });
+
+            dialog.show();
+        }
+        return true;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -189,6 +237,17 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     public void networkSenderLoop() {
+        SharedPreferences sharedPreferences = getApplication().getSharedPreferences("ADDR", MODE_PRIVATE);
+        final String ip_addr = sharedPreferences.getString("IP", "127.0.0.1");
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                sendToast("Sending to " + ip_addr);
+            }
+        });
+        Log.d(TAG, "networkSenderLoop: Sending to " + ip_addr);
+
         byte data[] = new byte[24];
         int temp;
         DatagramSocket datagramSocket;
@@ -231,7 +290,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     data[23] = (byte) ((temp & 0xff000000) >> 24);
 
 
-                    DatagramPacket datagramPacket = new DatagramPacket(data, 24, InetAddress.getByName("192.168.43.28"), PORT);
+                    DatagramPacket datagramPacket = new DatagramPacket(data, 24, InetAddress.getByName(ip_addr), PORT);
                     datagramSocket.send(datagramPacket);
                     Thread.sleep(17);
                 }
@@ -240,4 +299,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             Log.d(TAG, "networkSenderLoop: " + e);
         }
     }
+
+
 }
