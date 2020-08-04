@@ -21,7 +21,7 @@ GLuint vshader;
 GLuint fshader;
 GLuint program;
 
-GLint transformation_matrix_location;
+GLint scale_matrix_location;
 GLint x_rotation_matrix_location;
 GLint y_rotation_matrix_location;
 GLint z_rotation_matrix_location;
@@ -117,7 +117,7 @@ void shader_init()
 	glLinkProgram(program);
 	glUseProgram(program);
 
-	transformation_matrix_location = glGetUniformLocation(program, "transformation_matrix");
+	scale_matrix_location = glGetUniformLocation(program, "scale_matrix");
 	x_rotation_matrix_location = glGetUniformLocation(program, "x_rotation_matrix");
 	y_rotation_matrix_location = glGetUniformLocation(program, "y_rotation_matrix");
 	z_rotation_matrix_location = glGetUniformLocation(program, "z_rotation_matrix");
@@ -125,13 +125,14 @@ void shader_init()
 
 void processing_loop()
 {
-	glm::mat4 transformation_matrix = glm::mat4(1.0f);
+	glm::mat4 scale_matrix = glm::mat4(1.0f);
 	glm::mat4 x_rotation_matrix = glm::mat4(1.0);
 	glm::mat4 y_rotation_matrix = glm::mat4(1.0);
 	glm::mat4 z_rotation_matrix = glm::mat4(1.0);
 	glEnable(GL_DEPTH_TEST);
 	glUseProgram(program);
 	int bytes_read;
+	float scale_value;
 	
 	while (!glfwWindowShouldClose(window))
 	{
@@ -141,34 +142,37 @@ void processing_loop()
 
 		glUseProgram(program);
 
-		// transformation_matrix = glm::rotate(transformation_matrix, glm::radians(0.001f), glm::vec3(0.001f, 0.0f, 0.0f));
+		//gyroscope readings
+		//x axis
 		if (abs(app_data.gyro_x) < 0.35f)
-		{
 			x_rotation_matrix = glm::rotate(x_rotation_matrix, glm::radians(0.0f), glm::vec3(0.001f, 0.0f, 0.0f));
-		}
 		else
-		{
 			x_rotation_matrix = glm::rotate(x_rotation_matrix, glm::radians(app_data.gyro_x), glm::vec3(-1.0f, 0.0f, 0.0f));
-		}
-
+		//y axis
 		if (abs(app_data.gyro_y) < 0.35f)
-		{
 			y_rotation_matrix = glm::rotate(y_rotation_matrix, glm::radians(0.0f), glm::vec3(0.0f, 0.001f, 0.0f));
-		}
 		else
-		{
 			y_rotation_matrix = glm::rotate(y_rotation_matrix, glm::radians(app_data.gyro_y), glm::vec3(0.0f, -1.0f, 0.0f));
+		//z axis
+		if (abs(app_data.gyro_z) < 0.35f)
+			z_rotation_matrix = glm::rotate(z_rotation_matrix, glm::radians(0.0f), glm::vec3(0.0f, 0.0f, 0.001f));
+		else
+			z_rotation_matrix = glm::rotate(z_rotation_matrix, glm::radians(app_data.gyro_z), glm::vec3(0.0f, 0.0f, 1.0f));
+
+		//accelerometer reading. We'll ignore x,y for the time
+		scale_value = (0.01f) * (((abs(app_data.accel_z) > 3.0f) ? (app_data.accel_z) : (0)) * -1.0f);
+		scale_matrix = glm::scale(scale_matrix, glm::vec3(1.0f + scale_value, 1.0f + scale_value, 1.0f + scale_value));
+
+		//reset
+		if( glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS )
+		{
+			scale_matrix = glm::mat4(1.0f);
+			x_rotation_matrix = glm::mat4(1.0f);
+			y_rotation_matrix = glm::mat4(1.0f);
+			z_rotation_matrix = glm::mat4(1.0f);
 		}
 
-		if (abs(app_data.gyro_z) < 0.35f)
-		{
-			z_rotation_matrix = glm::rotate(z_rotation_matrix, glm::radians(0.0f), glm::vec3(0.0f, 0.0f, 0.001f));
-		}
-		else
-		{
-			z_rotation_matrix = glm::rotate(z_rotation_matrix, glm::radians(app_data.gyro_z), glm::vec3(0.0f, 0.0f, 1.0f));
-		}
-		glUniformMatrix4fv(transformation_matrix_location, 1, GL_FALSE, glm::value_ptr(transformation_matrix));
+		glUniformMatrix4fv(scale_matrix_location, 1, GL_FALSE, glm::value_ptr(scale_matrix));
 		glUniformMatrix4fv(x_rotation_matrix_location, 1, GL_FALSE, glm::value_ptr(x_rotation_matrix));
 		glUniformMatrix4fv(y_rotation_matrix_location, 1, GL_FALSE, glm::value_ptr(y_rotation_matrix));
 		glUniformMatrix4fv(z_rotation_matrix_location, 1, GL_FALSE, glm::value_ptr(z_rotation_matrix));
@@ -178,15 +182,6 @@ void processing_loop()
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 
-		// printf("%f %f %f %f %f %f\n",
-		// 	   app_data.gyro_x,
-		// 	   app_data.gyro_y,
-		// 	   app_data.gyro_z,
-		// 	   old_gyro_x,
-		// 	   old_gyro_y,
-		// 	   old_gyro_z);
-
-		// usleep(16666);
 	}
 }
 
@@ -210,6 +205,7 @@ void window_init()
 	window = glfwCreateWindow(1920, 1080, "3D_Test", NULL, NULL);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_SAMPLES, 16);
 	glfwMakeContextCurrent(window);
 	gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 }
