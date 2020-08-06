@@ -46,8 +46,8 @@ try:
 except KeyboardInterrupt:
     df = pd.DataFrame({
 		"accel_x": accel_x_ser,
-		"accel_y": accel_x_ser,
-		"accel_z": accel_x_ser,
+		"accel_y": accel_y_ser,
+		"accel_z": accel_z_ser,
 		"gyro_x_ser" : gyro_x_ser,
 		"gyro_y_ser" : gyro_y_ser,
 		"gyro_z_ser" : gyro_z_ser

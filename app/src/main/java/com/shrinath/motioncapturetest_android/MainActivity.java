@@ -82,6 +82,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     SensorManager sensorManager;
     Sensor accelerometer;
     Sensor gyroscope;
+    Sensor orientation;
 
     float map(float x, float in_min, float in_max, float out_min, float out_max) {
         return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
@@ -124,11 +125,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     void startAccelerometerDataAcquisition() {
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
         sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
 
         gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         sensorManager.registerListener(this, gyroscope, SensorManager.SENSOR_DELAY_FASTEST);
+
     }
 
     @Override
@@ -218,7 +220,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     @Override
     public void onSensorChanged(SensorEvent event) {
         Sensor sensor = event.sensor;
-        if (sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+        if (sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
 //            Log.d(TAG, "x : " + Float.toString(x) + "\ny : " + Float.toString(y) + "\nz : " + Float.toString(z) + "\n");
             accel_x = event.values[0];
             accel_y = event.values[1];

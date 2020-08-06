@@ -9,3 +9,14 @@ def window_filter(input_data, window_size=10):
 		)
 
 	return output_data
+
+def LPF(x, alpha=0.8):
+	y = []
+	first_run = True
+	for i in x:
+		if(first_run):
+			first_run = False
+			y.append( ( 1 - alpha ) * i )
+		else:
+			y.append( ( ( 1 - alpha ) * i ) + ( y[-1] * alpha ) )
+	return y
