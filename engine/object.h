@@ -21,20 +21,23 @@ private:
 public:
 	EngineObject();
 	void CreateObject();
+	void DrawObject(GLuint count_to_draw);
 
 
 	//set functions
 	void SetDataArray(GLfloat * data_arr,GLuint length);
 	void SetElementArray(GLuint * data_arr,GLuint length);
-	void CreateFShader();
-	void CreateFShader();
+	void CreateVShader(const char * filename);
+	void CreateFShader(const char * filename);
 
 	//get functions
 	GLuint GetVertexArray();
 	GLuint GetVertexBuffer();
 	GLuint GetElementBuffer();
-	GLuint GetVShader();
-	GLuint GetFShader();
+	GLuint GetVShaderGLuint();
+	GLuint GetFShaderGLuint();
+	EngineShader GetVShaderObj();
+	EngineShader GetFShaderObj();
 };
 
 
