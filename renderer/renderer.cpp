@@ -10,6 +10,9 @@
 
 #include "network.hpp"
 
+#define ALPHA 0.6
+#define UPDATE_OLD_APP_DATA memcpy(&old_app_data, &app_data, sizeof(struct _app_data_))
+
 extern struct _app_data_ app_data;
 struct _app_data_ old_app_data = {0,};
 GLFWwindow *window;
@@ -25,6 +28,7 @@ GLint scale_matrix_location;
 GLint x_rotation_matrix_location;
 GLint y_rotation_matrix_location;
 GLint z_rotation_matrix_location;
+GLint transform_matrix_location;
 
 const GLfloat cube_data[] = {
 	//down
@@ -121,6 +125,7 @@ void shader_init()
 	x_rotation_matrix_location = glGetUniformLocation(program, "x_rotation_matrix");
 	y_rotation_matrix_location = glGetUniformLocation(program, "y_rotation_matrix");
 	z_rotation_matrix_location = glGetUniformLocation(program, "z_rotation_matrix");
+	transform_matrix_location = glGetUniformLocation(program, "transform_matrix");
 }
 
 void processing_loop()
@@ -129,14 +134,19 @@ void processing_loop()
 	glm::mat4 x_rotation_matrix = glm::mat4(1.0);
 	glm::mat4 y_rotation_matrix = glm::mat4(1.0);
 	glm::mat4 z_rotation_matrix = glm::mat4(1.0);
+	glm::mat4 transform_matrix = glm::mat4(1.0f);
 	glEnable(GL_DEPTH_TEST);
 	glUseProgram(program);
 	int bytes_read;
 	float scale_value;
+
+	float filtered_x;
+	float filtered_y;
 	
 	while (!glfwWindowShouldClose(window))
 	{
 		bytes_read = NETWORK_read_data();
+		UPDATE_OLD_APP_DATA;
 		// printf("%d ", bytes_read);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -163,6 +173,12 @@ void processing_loop()
 		scale_value = (0.01f) * (((abs(app_data.accel_z) > 3.0f) ? (app_data.accel_z) : (0)) * -1.0f);
 		scale_matrix = glm::scale(scale_matrix, glm::vec3(1.0f + scale_value, 1.0f + scale_value, 1.0f + scale_value));
 
+		//LPF for translation
+		filtered_x = (app_data.accel_x * (1 - ALPHA)) + (old_app_data.accel_x * ALPHA);
+		filtered_y = (app_data.accel_y * (1 - ALPHA)) + (old_app_data.accel_y * ALPHA);
+
+		transform_matrix = glm::translate(transform_matrix, glm::vec3(0.0f + (app_data.accel_x * ((abs(filtered_x) < 0.5f) ? 0.0f : 0.01f)), 0.0f  + (app_data.accel_y * ((abs(filtered_y) < 0.5f) ? 0.0f : 0.01f)), 0.0f));
+
 		//reset
 		if( glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS )
 		{
@@ -170,12 +186,14 @@ void processing_loop()
 			x_rotation_matrix = glm::mat4(1.0f);
 			y_rotation_matrix = glm::mat4(1.0f);
 			z_rotation_matrix = glm::mat4(1.0f);
+			transform_matrix = glm::mat4(1.0f);
 		}
 
 		glUniformMatrix4fv(scale_matrix_location, 1, GL_FALSE, glm::value_ptr(scale_matrix));
 		glUniformMatrix4fv(x_rotation_matrix_location, 1, GL_FALSE, glm::value_ptr(x_rotation_matrix));
 		glUniformMatrix4fv(y_rotation_matrix_location, 1, GL_FALSE, glm::value_ptr(y_rotation_matrix));
 		glUniformMatrix4fv(z_rotation_matrix_location, 1, GL_FALSE, glm::value_ptr(z_rotation_matrix));
+		glUniformMatrix4fv(transform_matrix_location, 1, GL_FALSE, glm::value_ptr(transform_matrix));
 		glBindVertexArray(vao);
 		glDrawArrays(GL_TRIANGLES, 0, sizeof(cube_data) / (sizeof(GLfloat) * 6));
 
