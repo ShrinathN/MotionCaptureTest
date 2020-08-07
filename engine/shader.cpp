@@ -36,7 +36,7 @@ void EngineShader::LoadShaderFromFile(const char * filepath)
 	}
 	//getting file length
 	fseek(in, 0, SEEK_END);
-	file_length = ftell(in);
+	file_length = ftell(in) + 1;
 	fseek(in, 0, SEEK_SET);
 
 	//allocating memory for the shader and copying shader

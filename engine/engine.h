@@ -11,9 +11,14 @@ private:
 	GLuint window_height;
 	GLuint anit_aliasing;
 	char * window_title;
+
+	GLuint clear_r;
+	GLuint clear_g;
+	GLuint clear_b;
 public:
 	EngineEngine();
 	EngineEngine(GLuint width, GLuint height, const char * title);
+	void ClearColor();
 
 	//set functions
 	void SetWidth(int w);
@@ -21,6 +26,7 @@ public:
 	void SetTitle(const char * title);
 	void SetAA(GLuint aa);
 	void CreateWindow();
+	void SetClearColor(GLuint r, GLuint g, GLuint b);
 
 	void CreateContextCurrent();
 

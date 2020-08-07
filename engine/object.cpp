@@ -24,7 +24,7 @@ void EngineObject::CreateObject()
 {
 	glBindVertexArray(this->vertex_array_object);
 	glBindBuffer(GL_ARRAY_BUFFER, this->vertex_buffer_object);
-	glBufferData(GL_ARRAY_BUFFER, this->DataArrayLength, &this->PtrToDataArray, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, this->DataArrayLength, this->PtrToDataArray, GL_STATIC_DRAW);
 }
 
 

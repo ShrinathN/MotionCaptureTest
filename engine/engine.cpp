@@ -2,6 +2,7 @@
 
 EngineEngine::EngineEngine()
 {
+	printf("Creating! %x", this);
 	return;
 }
 
@@ -10,6 +11,16 @@ EngineEngine::EngineEngine(GLuint width, GLuint height, const char * title)
 	this->SetWidth(width);
 	this->SetHeight(height);
 	this->SetTitle(title);
+}
+
+void EngineEngine::ClearColor()
+{
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
+void EngineEngine::SetClearColor(GLuint r, GLuint g, GLuint b)
+{
+	glClearColor(r,g,b,1.0);
 }
 
 void EngineEngine::CreateWindow()
