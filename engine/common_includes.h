@@ -1,6 +1,9 @@
 #ifndef COMMON_INCLUDES_H
 #define COMMON_INCLUDES_H
 
+#include <stdio.h>
+
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <stb_image.h>
 #include <unistd.h>
