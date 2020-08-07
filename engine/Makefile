@@ -6,6 +6,7 @@ SRC = test.cpp \
 engine.cpp \
 object.cpp \
 shader.cpp \
+shader_program.cpp \
 stb_image.cpp \
 glad/src/glad.c
 

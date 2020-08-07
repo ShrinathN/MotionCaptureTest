@@ -34,10 +34,10 @@ public:
 	GLuint GetVertexArray();
 	GLuint GetVertexBuffer();
 	GLuint GetElementBuffer();
-	GLuint GetVShaderGLuint();
-	GLuint GetFShaderGLuint();
-	EngineShader GetVShaderObj();
-	EngineShader GetFShaderObj();
+	GLuint * GetVShaderGLuint();
+	GLuint * GetFShaderGLuint();
+	EngineShader * GetVShaderObj();
+	EngineShader * GetFShaderObj();
 };
 
 

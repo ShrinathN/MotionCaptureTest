@@ -2,8 +2,7 @@
 
 EngineEngine::EngineEngine()
 {
-	printf("Creating! %x", this);
-	return;
+	// return;
 }
 
 EngineEngine::EngineEngine(GLuint width, GLuint height, const char * title)

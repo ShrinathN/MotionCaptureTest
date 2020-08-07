@@ -18,27 +18,9 @@ public:
 	void SetShaderType(GLint shader_type);
 
 	//get functions
-	GLuint GetShaderGLuint();
+	GLuint * GetShaderGLuint();
 	char * GetPtrToSource();
 };
 
-class EngineProgram {
-
-private:
-	GLuint program;
-
-public:
-	EngineProgram();
-
-	//get functions
-	GLuint GetProgramGLuint();
-
-	//set functions
-	void AddShader(EngineShader shader);
-	void LinkProgram();
-
-	void UseProgram();
-
-};
 
 #endif

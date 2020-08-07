@@ -48,7 +48,7 @@ void EngineShader::LoadShaderFromFile(const char * filepath)
 
 void EngineShader::CompileShader()
 {
-	// printf("%s\n", this->ptr_to_shader);
+	printf("%s\n", this->ptr_to_shader);
 	//if compilation was successful
 	GLint success;
 	//length of the compile error / warning log
@@ -60,60 +60,24 @@ void EngineShader::CompileShader()
 	glGetShaderiv(this->shader, GL_COMPILE_STATUS, &success);
 	glGetShaderiv(this->shader, GL_INFO_LOG_LENGTH, &log_length);
 
+	printf("%d %d\n", success, log_length);
 	//this means 0 errors or warnings, most likely there will be errors or warnings etc
-	if (log_length == 0 && success) return;
+	if (log_length == 1 && success) return;
 
 	//allocating space for buffer and printing buffer
 	char * log_buffer = (char *)malloc(log_length);
 	bzero(log_buffer, log_length);
 	glGetShaderInfoLog(this->shader, log_length, NULL, log_buffer);
 	printf("%s", log_buffer);
+	free(log_buffer);
 }
 
-GLuint EngineShader::GetShaderGLuint()
+GLuint * EngineShader::GetShaderGLuint()
 {
-	return this->shader;
+	return &this->shader;
 }
 
 char * EngineShader::GetPtrToSource()
 {
 	return this->ptr_to_shader;
-}
-
-
-EngineProgram::EngineProgram()
-{
-	this->program = glCreateProgram();
-}
-
-GLuint EngineProgram::GetProgramGLuint()
-{
-	return this->program;
-}
-
-void EngineProgram::AddShader(EngineShader shader)
-{
-	glAttachShader(this->GetProgramGLuint(), shader.GetShaderGLuint());
-}
-
-void EngineProgram::LinkProgram()
-{
-	GLint success;
-	GLint buffer_length;
-
-	glLinkProgram(this->GetProgramGLuint());
-	glGetProgramiv(this->GetProgramGLuint(), GL_COMPILE_STATUS, &success);
-	glGetProgramiv(this->GetProgramGLuint(), GL_INFO_LOG_LENGTH, &buffer_length);
-
-	if(buffer_length == 0 && success) return;
-
-	char * buffer_log = (char*)malloc(buffer_length);
-	bzero(buffer_log, buffer_length);
-	glGetProgramInfoLog(this->GetProgramGLuint(), buffer_length, NULL, buffer_log);
-	printf("%s\n", buffer_log);
-}
-
-void EngineProgram::UseProgram()
-{
-	glUseProgram(this->program);
 }

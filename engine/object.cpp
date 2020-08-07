@@ -43,34 +43,36 @@ GLuint EngineObject::GetElementBuffer()
 	return this->element_buffer_object;
 }
 
-GLuint EngineObject::GetVShaderGLuint()
+GLuint * EngineObject::GetVShaderGLuint()
 {
-	return vshader.GetShaderGLuint();
+	return this->vshader.GetShaderGLuint();
 }
 
-GLuint EngineObject::GetFShaderGLuint()
+GLuint * EngineObject::GetFShaderGLuint()
 {
-	return fshader.GetShaderGLuint();
+	return this->fshader.GetShaderGLuint();
 }
 
-EngineShader EngineObject::GetVShaderObj()
+EngineShader * EngineObject::GetVShaderObj()
 {
-	return vshader;
+	return &vshader;
 }
 
-EngineShader EngineObject::GetFShaderObj()
+EngineShader * EngineObject::GetFShaderObj()
 {
-	return fshader;
+	return &fshader;
 }
 
 void EngineObject::CreateVShader(const char * filename)
 {
 	this->vshader = EngineShader(filename, GL_VERTEX_SHADER);
+	this->vshader.CompileShader();
 }
 
 void EngineObject::CreateFShader(const char * filename)
 {
 	this->fshader = EngineShader(filename, GL_FRAGMENT_SHADER);
+	this->fshader.CompileShader();
 }
 
 void EngineObject::DrawObject(GLuint count_to_draw)
