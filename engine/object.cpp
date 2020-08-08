@@ -81,3 +81,11 @@ void EngineObject::DrawObject(GLuint count_to_draw)
 	glBindBuffer(GL_ARRAY_BUFFER, this->vertex_buffer_object);
 	glDrawArrays(GL_TRIANGLES, 0, count_to_draw);
 }
+
+void EngineObject::AddVAPointer(GLuint number, GLuint data_type, GLuint normalized, GLuint strid, GLuint offset)
+{
+	glBindVertexArray(this->vertex_array_object);
+	glBindBuffer(GL_ARRAY_BUFFER, this->vertex_buffer_object);
+	glVertexAttribPointer(this->vertex_attrib_ptr_ctr, number, data_type, normalized, strid, (void *)offset);
+	glEnableVertexAttribArray(this->vertex_attrib_ptr_ctr++);
+}

@@ -16,6 +16,8 @@ private:
 	GLuint * PtrToEboArray;
 	GLuint DataElementLength;
 
+	GLuint vertex_attrib_ptr_ctr = 0;
+
 	EngineShader vshader;
 	EngineShader fshader;
 public:
@@ -29,6 +31,7 @@ public:
 	void SetElementArray(GLuint * data_arr,GLuint length);
 	void CreateVShader(const char * filename);
 	void CreateFShader(const char * filename);
+	void AddVAPointer(GLuint number, GLuint data_type, GLuint normalized, GLuint strid, GLuint offset);
 
 	//get functions
 	GLuint GetVertexArray();

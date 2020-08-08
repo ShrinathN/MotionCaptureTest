@@ -18,14 +18,13 @@ int main()
 	EngineObject obj0 = EngineObject();
 	obj0.SetDataArray(data, sizeof(data));
 	obj0.CreateObject();
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void *)0);
-	glEnableVertexAttribArray(0);
+	obj0.AddVAPointer(3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
 
-	obj0.CreateVShader("shader.vs");
+	// obj0.CreateVShader("shader.vs");
 	obj0.CreateFShader("shader.fs");
 
 	EngineProgram program = EngineProgram();
-	program.AddShader(obj0.GetVShaderGLuint());
+	// program.AddShader(obj0.GetVShaderGLuint());
 	program.AddShader(obj0.GetFShaderGLuint());
 	program.LinkProgram();
 	program.UseProgram();
