@@ -19,12 +19,9 @@ int main()
 	obj0.SetDataArray(data, sizeof(data));
 	obj0.CreateObject();
 	obj0.AddVAPointer(3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
-
-	// obj0.CreateVShader("shader.vs");
 	obj0.CreateFShader("shader.fs");
 
 	EngineProgram program = EngineProgram();
-	// program.AddShader(obj0.GetVShaderGLuint());
 	program.AddShader(obj0.GetFShaderGLuint());
 	program.LinkProgram();
 	program.UseProgram();
@@ -32,7 +29,7 @@ int main()
 	engine.SetClearColor(1.0f, 0.0f, 0.0f);
 	while (!glfwWindowShouldClose(engine.GetWindow()))
 	{
-		// program.UseProgram();
+		program.UseProgram();
 		engine.ClearColor();
 		obj0.DrawObject(3);
 
