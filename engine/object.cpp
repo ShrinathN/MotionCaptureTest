@@ -89,9 +89,3 @@ void EngineObject::AddVAPointer(GLuint number, GLuint data_type, GLuint normaliz
 	glVertexAttribPointer(this->vertex_attrib_ptr_ctr, number, data_type, normalized, strid, (void *)offset);
 	glEnableVertexAttribArray(this->vertex_attrib_ptr_ctr++);
 }
-
-void EngineObject::AddPreprocessFunction(void * function_ptr, void * argument_ptr)
-{
-	this->preprocess_function[this->preprocess_function_ctr].preprocess_function_ptr = (preprocess_function_ptr)function_ptr;
-	this->preprocess_function[this->preprocess_function_ctr++].argument = argument_ptr;
-}

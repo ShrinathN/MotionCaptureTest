@@ -45,7 +45,6 @@ public:
 
 	void CreateContextCurrent();
 
-	void ProcessingLoop();
 
 	GLFWwindow * GetWindow();
 };

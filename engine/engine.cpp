@@ -61,11 +61,3 @@ GLFWwindow * EngineEngine::GetWindow()
 {
 	return this->window;
 }
-
-void EngineEngine::ProcessingLoop()
-{
-	while( !glfwWindowShouldClose(this->window) )
-	{
-		
-	}
-}

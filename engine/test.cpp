@@ -32,9 +32,8 @@ int main()
 		program.UseProgram();
 		engine.ClearColor();
 		obj0.DrawObject(3);
-
 		glfwSwapBuffers(engine.GetWindow());
-		glfwPollEvents();
+		glfwPollEvents();		
 	}
 
 	return 0;

@@ -18,14 +18,6 @@ private:
 
 	GLuint vertex_attrib_ptr_ctr = 0;
 
-	typedef void (*preprocess_function_ptr)(void *);
-	GLuint preprocess_function_ctr = 0;
-	struct _preprocess_function_ {
-		preprocess_function_ptr preprocess_function_ptr;
-		void * argument;
-	};
-	struct _preprocess_function_ preprocess_function[100];
-
 	EngineShader vshader;
 	EngineShader fshader;
 public:
@@ -40,7 +32,6 @@ public:
 	void CreateVShader(const char * filename);
 	void CreateFShader(const char * filename);
 	void AddVAPointer(GLuint number, GLuint data_type, GLuint normalized, GLuint strid, GLuint offset);
-	void AddPreprocessFunction(void * function_ptr, void * argument_ptr);
 
 	//get functions
 	GLuint GetVertexArray();
