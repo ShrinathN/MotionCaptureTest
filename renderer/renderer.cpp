@@ -170,14 +170,14 @@ void processing_loop()
 			z_rotation_matrix = glm::rotate(z_rotation_matrix, glm::radians(app_data.gyro_z), glm::vec3(0.0f, 0.0f, 1.0f));
 
 		//accelerometer reading. We'll ignore x,y for the time
-		scale_value = (0.01f) * (((abs(app_data.accel_z) > 3.0f) ? (app_data.accel_z) : (0)) * -1.0f);
-		scale_matrix = glm::scale(scale_matrix, glm::vec3(1.0f + scale_value, 1.0f + scale_value, 1.0f + scale_value));
+		// scale_value = (0.01f) * (((abs(app_data.accel_z) > 3.0f) ? (app_data.accel_z) : (0)) * -1.0f);
+		// scale_matrix = glm::scale(scale_matrix, glm::vec3(1.0f + scale_value, 1.0f + scale_value, 1.0f + scale_value));
 
-		//LPF for translation
-		filtered_x = (app_data.accel_x * (1 - ALPHA)) + (old_app_data.accel_x * ALPHA);
-		filtered_y = (app_data.accel_y * (1 - ALPHA)) + (old_app_data.accel_y * ALPHA);
+		// //LPF for translation
+		// filtered_x = (app_data.accel_x * (1 - ALPHA)) + (old_app_data.accel_x * ALPHA);
+		// filtered_y = (app_data.accel_y * (1 - ALPHA)) + (old_app_data.accel_y * ALPHA);
 
-		transform_matrix = glm::translate(transform_matrix, glm::vec3(0.0f + (app_data.accel_x * ((abs(filtered_x) < 0.5f) ? 0.0f : 0.01f)), 0.0f  + (app_data.accel_y * ((abs(filtered_y) < 0.5f) ? 0.0f : 0.01f)), 0.0f));
+		// transform_matrix = glm::translate(transform_matrix, glm::vec3(0.0f + (app_data.accel_x * ((abs(filtered_x) < 0.5f) ? 0.0f : 0.01f)), 0.0f  + (app_data.accel_y * ((abs(filtered_y) < 0.5f) ? 0.0f : 0.01f)), 0.0f));
 
 		//reset
 		if( glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS )
