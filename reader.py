@@ -71,12 +71,20 @@ axs[1,0].plot(n, gyro_z_ser)
 axs[1,0].legend(["X", "Y", "Z"])
 axs[1,0].set_title('Gyroscope (rad/s)')
 
-accel_x_ser_window_filtered = filter.window_filter(accel_x_ser)
-accel_y_ser_window_filtered = filter.window_filter(accel_y_ser)
-accel_z_ser_window_filtered = filter.window_filter(accel_z_ser)
-gyro_x_ser_window_filtered = filter.window_filter(gyro_x_ser)
-gyro_y_ser_window_filtered = filter.window_filter(gyro_y_ser)
-gyro_z_ser_window_filtered = filter.window_filter(gyro_z_ser)
+# accel_x_ser_window_filtered = filter.window_filter(accel_x_ser)
+# accel_y_ser_window_filtered = filter.window_filter(accel_y_ser)
+# accel_z_ser_window_filtered = filter.window_filter(accel_z_ser)
+# gyro_x_ser_window_filtered = filter.window_filter(gyro_x_ser)
+# gyro_y_ser_window_filtered = filter.window_filter(gyro_y_ser)
+# gyro_z_ser_window_filtered = filter.window_filter(gyro_z_ser)
+
+accel_x_ser_window_filtered = filter.LPF(accel_x_ser)
+accel_y_ser_window_filtered = filter.LPF(accel_y_ser)
+accel_z_ser_window_filtered = filter.LPF(accel_z_ser)
+gyro_x_ser_window_filtered = filter.LPF(gyro_x_ser)
+gyro_y_ser_window_filtered = filter.LPF(gyro_y_ser)
+gyro_z_ser_window_filtered = filter.LPF(gyro_z_ser)
+
 
 #window filter data
 #accelerometer plot
