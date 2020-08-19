@@ -21,6 +21,30 @@
 
     </LinearLayout>
 
+    <RadioGroup
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <RadioButton
+            android:id="@+id/raidoButton_linear_acceleration"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Linear Acceleration"/>
+
+        <RadioButton
+            android:id="@+id/raidoButton_accelerometer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Accelerometer"/>
+
+        <RadioButton
+            android:id="@+id/raidoButton_game_rotation_vector"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Game Rotation Vector"/>
+
+    </RadioGroup>
+
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

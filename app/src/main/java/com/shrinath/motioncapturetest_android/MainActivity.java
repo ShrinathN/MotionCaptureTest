@@ -25,6 +25,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -82,7 +83,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     SensorManager sensorManager;
     Sensor accelerometer;
     Sensor gyroscope;
-    Sensor orientation;
 
     float map(float x, float in_min, float in_max, float out_min, float out_max) {
         return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
@@ -124,8 +124,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     };
 
     void startAccelerometerDataAcquisition() {
+        SharedPreferences sharedPreferences = getSharedPreferences("SENSOR_DATA", MODE_PRIVATE);
+        int selected_sensor0 = sharedPreferences.getInt("ACCEL", Sensor.TYPE_ACCELEROMETER);
+        Log.d(TAG, "startAccelerometerDataAcquisition: " + selected_sensor0);
+
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
+        accelerometer = sensorManager.getDefaultSensor(selected_sensor0);
         sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
 
         gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
@@ -145,20 +149,41 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
 
-        if(id == R.id.menu_select_ip) {
+        if (id == R.id.menu_select_ip) {
             final Dialog dialog = new Dialog(this);
             dialog.setContentView(R.layout.layout_selectip);
             Button button_set_ip = dialog.findViewById(R.id.button_set_ip);
             final EditText editText_ip_addr = dialog.findViewById(R.id.editText_ip_addr);
+            final RadioButton raidoButton_linear_acceleration = dialog.findViewById(R.id.raidoButton_linear_acceleration);
+            final RadioButton raidoButton_accelerometer = dialog.findViewById(R.id.raidoButton_accelerometer);
+            final RadioButton raidoButton_game_rotation_vector = dialog.findViewById(R.id.raidoButton_game_rotation_vector);
 
             button_set_ip.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    Log.d(TAG, "onClick: editText length" + editText_ip_addr.length());
+                    if (editText_ip_addr.length() != 0) {
+                        SharedPreferences.Editor editor = getApplicationContext().getSharedPreferences("ADDR", MODE_PRIVATE).edit();
+                        editor.putString("IP", editText_ip_addr.getText().toString());
+                        editor.commit();
+                        editor.apply();
+                    }
 
-                    SharedPreferences.Editor editor = getApplicationContext().getSharedPreferences("ADDR", MODE_PRIVATE).edit();
-                    editor.putString("IP", editText_ip_addr.getText().toString());
-                    editor.commit();
-                    editor.apply();
+                    int accel_selected = Sensor.TYPE_ACCELEROMETER;
+                    if (raidoButton_linear_acceleration.isChecked()) {
+                        accel_selected = Sensor.TYPE_LINEAR_ACCELERATION;
+                        Log.d(TAG, "onClick: Linear Accel");
+                    } else if (raidoButton_accelerometer.isChecked()) {
+                        accel_selected = Sensor.TYPE_ACCELEROMETER;
+                        Log.d(TAG, "onClick: Accelerometer");
+                    } else if (raidoButton_game_rotation_vector.isChecked()) {
+                        accel_selected = Sensor.TYPE_GAME_ROTATION_VECTOR;
+                        Log.d(TAG, "onClick: Game Rotation");
+                    }
+                    SharedPreferences.Editor editor1 = getApplicationContext().getSharedPreferences("SENSOR_DATA", MODE_PRIVATE).edit();
+                    editor1.putInt("ACCEL", accel_selected);
+                    editor1.commit();
+                    editor1.apply();
 
                     dialog.dismiss();
                 }
@@ -220,7 +245,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     @Override
     public void onSensorChanged(SensorEvent event) {
         Sensor sensor = event.sensor;
-        if (sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
+        if (sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION || sensor.getType() == Sensor.TYPE_ACCELEROMETER || sensor.getType() == Sensor.TYPE_GAME_ROTATION_VECTOR) {
 //            Log.d(TAG, "x : " + Float.toString(x) + "\ny : " + Float.toString(y) + "\nz : " + Float.toString(z) + "\n");
             accel_x = event.values[0];
             accel_y = event.values[1];
